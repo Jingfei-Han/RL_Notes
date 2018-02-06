@@ -101,7 +101,7 @@
 我们没有选择过e状态，进而导致无法进入g\*状态，问题出在哪里呢？问题就在于我们对于e状态的估值不准确，或者说按照之前的经验，我们可能没有进入过e状态，无法进行准确估计，因为
 这一次探索性尝试，我们选择了e状态，然后发现后面可能得到更好的状态估值。所以这里我们应该更新状态e的状态值。同理，其他情况也是同样的思路，需要更新之前的状态值。这种情况叫做回退(back up)
 
-因此如果我们假设![](https://latex.codecogs.com/png.latex?\inline s)表示贪心之前的状态值，![](https://latex.codecogs.com/png.latex?s')
+因此如果我们假设![](https://latex.codecogs.com/png.latex?s)表示贪心之前的状态值，![](https://latex.codecogs.com/png.latex?s')
 表示移动之后的状态。![](https://latex.codecogs.com/png.latex?s)的状态值估计更新规则如下：
 <center>
 
@@ -109,7 +109,7 @@
 
 </center>
 
-上述更新方法称为“时序差分学习”(Temporal-Difference Learning)。差分的意思就是 ![](https://latex.codecogs.com/png.latex?\inline V(s')-V(s))
+上述更新方法称为“时序差分学习”(Temporal-Difference Learning)。差分的意思就是 ![](https://latex.codecogs.com/png.latex?V(s')-V(s))
 
 强化学习的一个重要特征就是可以在不使用对手模型和明确指导的情况下，给对手挖一个多步的陷阱，环环相扣，最后取得胜利。
 
