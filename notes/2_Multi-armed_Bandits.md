@@ -181,3 +181,68 @@ a获得的奖赏的期望。即：
 ![](https://latex.codecogs.com/png.latex?\alpha)，其实应该是
 ![](https://latex.codecogs.com/png.latex?\alpha_t(a))，但是一般无论当前是第几步还是选择的第几个动作，步长一般设置成一样的，一般是
 ![](https://latex.codecogs.com/png.latex?\frac{1}{n})
+
+# 6. 考虑不稳定的情况(Tracking a Nonstationary Problem)
+
+前面讨论的估值方法主要适用于稳定的老虎机问题(Stationary bandit problems)，意思就是奖赏的概率分布是确定的，不会改变的。
+假如我们的概率分布是改变的，我们就更应该关注于当前获得的奖赏，而不是原来的奖赏，因为最近的奖赏对新的奖赏会更有影响。
+一种很常见的方法就是使用固定(Constant)的步长参数（注意之前的步长参数与n是相关的）。公式为
+
+<center>
+
+![](https://latex.codecogs.com/png.latex?Q_{n+1}\doteq Q_n+\alpha[R_n-Q_n])
+
+</center>
+
+其中
+![](https://latex.codecogs.com/png.latex?\alpha\in(0,1]))
+是一个常数。为什么步长为常数就可以使估值更加重视最近的奖赏呢？其实可以进行下面的推导：
+
+<center>
+
+![](../images/2_Multi_armed_Bandits/constant_step.png)
+
+</center>
+
+可以证明，
+<center>
+
+![](../images/2_Multi_armed_Bandits/weight_sum.png)
+
+</center>
+
+表示其实新的估值是以前所得奖赏的加权平均。并且权重和为1。同时可以看出越近的奖赏，n-i越小，因此权值越大。
+当
+![](https://latex.codecogs.com/png.latex?1-\alpha=0)
+时，表示估值只需看最近的奖赏值。注意
+![](https://latex.codecogs.com/png.latex?0^0=1)
+
+这种方法叫做**指数最近加权平均(Exponential recency-weighted average)**。
+
+有时候我们希望步长是随着时间变化的，这时步长就用
+![](https://latex.codecogs.com/png.latex?\alpha_n(a))
+表示。比如之前的采样平均法，
+![](https://latex.codecogs.com/png.latex?\alpha_n(a)=\frac{1}{n})。
+这可以由大数定律保证估值收敛到真正的动作价值。但是**不是所有的变化步长都能保证最终的收敛**。
+
+那到底什么时候才能收敛呢？或者步长满足什么条件是才能保证收敛呢？这里随机近似理论(Stochastic approximation theory)告诉我们：
+只要满足下面的两个公式，就可以保证最终以概率1收敛到真正的动作价值。条件如下：
+
+<center>
+
+![](../images/2_Multi_armed_Bandits/condition.png)
+
+</center>
+
+其中的第一个公式保证步长要足够大，以便于能够克服初始的随机值和波动；第二个公式保证步长要足够小，以便于保证能收敛到真正的动作价值。
+
+由高等数学的知识就可以证明之前的采样平均满足这两个等式。
+
+但是，**当步长为固定值时，无法满足第二个条件**，这也就说明固定步长为常数的方法不能够完全收敛，而是随着最近的奖赏不断变化。
+
+虽然说理论上需要满足上面的两个条件才可以收敛，但是由于现实情况中不稳定问题经常出现，并且即使稳定，满足条件的情况的收敛速度很慢，并且需要
+很好的调优过程才能得到较好的收敛速度。 **因此在实际应用中很少要求步长必须满足上面的条件**。
+
+下面我们对于不稳定情况，使用前面的试验台进行模拟，实验设置所有动作的真实价值都是0，在每一次选择之后，对于所有动作的真实价值加上一个服从
+N(0, 0.01)的噪声。我们使用的动作估值方法有两种，一种是采样平均法，另一种是指数最近加权平均法。对于后者设置步长恒定为0.1。整个实验设置
+![](https://latex.codecogs.com/png.latex?\epsilon=0.1)。实验步长为10000步。 
