@@ -228,7 +228,7 @@ a获得的奖赏的期望。即：
 那到底什么时候才能收敛呢？或者步长满足什么条件是才能保证收敛呢？这里随机近似理论(Stochastic approximation theory)告诉我们：
 只要满足下面的两个公式，就可以保证最终以概率1收敛到真正的动作价值。条件如下：
 
-<center>
+<ceter>
 
 ![](../images/2_Multi_armed_Bandits/condition.png)
 
@@ -246,3 +246,25 @@ a获得的奖赏的期望。即：
 下面我们对于不稳定情况，使用前面的试验台进行模拟，实验设置所有动作的真实价值都是0，在每一次选择之后，对于所有动作的真实价值加上一个服从
 N(0, 0.01)的噪声。我们使用的动作估值方法有两种，一种是采样平均法，另一种是指数最近加权平均法。对于后者设置步长恒定为0.1。整个实验设置
 ![](https://latex.codecogs.com/png.latex?\epsilon=0.1)。实验步长为10000步。 
+
+最终得到平均奖赏示意图为：
+
+<center>
+
+![](../codes/2_Multi_armed_Bandits/nonstationary_reward.png)
+
+</center>
+
+可以看出权重更新法的平均权重要由于采样平均法。
+
+从最优动作选择的概率上看，
+
+<center>
+
+![](../codes/2_Multi_armed_Bandits/nonstationary_optimal.png)
+
+</center>
+
+可见加权更新的方法命中最优权重的概率较大，而采样平均法由于更新速度较慢，因此不太能跟上非稳态的变化速度，因此效果差一点。
+
+
