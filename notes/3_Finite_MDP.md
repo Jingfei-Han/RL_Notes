@@ -390,3 +390,144 @@ episode还是重新开始。有episode的任务称为**episodic tasks**。
 以后的内容中经常会使用backup图来展示算法的图示。
 
 # 6. 最优策略和最优价值函数(Optimal Policies and Optimal Value Functions)
+
+解决一个强化学习任务其实就是我们要找到一种策略，实现长时reward最大。这就需要我们找到更好的policy。那怎么衡量一个policy比
+另一个policy好呢？一个没有争议的定义方法就是：如果policy
+![](https://latex.codecogs.com/png.latex?\pi)
+在所有状态的expected return都比另一个policy
+![](https://latex.codecogs.com/png.latex?\pi')
+的expected return要高，那就说明策略
+![](https://latex.codecogs.com/png.latex?\pi)
+比策略
+![](https://latex.codecogs.com/png.latex?\pi')
+要好。
+
+这就是说我所有状态的期望回报都是最大的，那我比你好是没问题的。换句话说，
+![](https://latex.codecogs.com/png.latex?\pi>=2)
+当且仅当对所有的
+![](https://latex.codecogs.com/png.latex?s\in S)
+，都满足
+![](https://latex.codecogs.com/png.latex?v_\pi(s)>=v_{\pi'}(s))
+
+总是至少存在这样一个策略满足这一点，这就是一个最优策略(**Optimal policy**)，尽管可能存在多个最优策略，我们定义所有的
+最优策略都记为
+![](https://latex.codecogs.com/png.latex?\pi_*)
+。他们肯定都有同样的状态值函数(state-value function)，这称为最优状态值函数(**Optimal state-value function**)，
+记为
+![](https://latex.codecogs.com/png.latex?v_*)
+。可以定义对于所有的状态s，满足：
+
+<center>
+
+![](https://latex.codecogs.com/png.latex?v_*(s)\doteq\underset{\pi}{max}v_\pi(s))
+
+</center>
+
+最优策略们也共享同一个最优动作值函数(optimal action-value function)，定义为
+![](https://latex.codecogs.com/png.latex?q_*)
+，对于所有的s和a，满足
+
+<center>
+
+![](https://latex.codecogs.com/png.latex?q_*(s,a)\doteq\underset{\pi}{max}q_\pi(s,a))
+
+</center>
+
+对于状态-动作对(s,a)，上面的函数的意思是在状态s下，先选择状态a，然后再按照最优策略
+![](https://latex.codecogs.com/png.latex?\pi_*)
+继续后续选择的expected return。因此我们可以把
+![](https://latex.codecogs.com/png.latex?q_*)
+和
+![](https://latex.codecogs.com/png.latex?v_*)
+联系起来。
+
+<center>
+
+![](https://latex.codecogs.com/png.latex?q_*(s,a)=E[R_{t+1}+\gamma v_*(S_{t+1})|S_t=s,A_t=a])
+
+</center>
+
+![](https://latex.codecogs.com/png.latex?v_*)
+被称为Bellman最优等式(Bellman optimality equation)。直观上讲，Bellman最优等式就是利用了一个事实：
+在一个状态下，根据最优策略得到的价值，必然等于在这个状态下选择最优动作后，再根据最优策略继续后续选择的价值。
+如果不满足的话，那把从s下选择这个最优动作的策略替换到原来的策略上，这个才是最优策略。我们可以得到下面的推导：
+
+<center>
+
+![](../images/3_Finite_MDP/optimal_value.PNG)
+
+</center>
+
+对于
+![](https://latex.codecogs.com/png.latex?q_*)
+的Bellman optimality equation为：
+
+<center>
+
+![](../images/3_Finite_MDP/optimal_action.PNG)
+
+</center>
+
+其实，这里q和v扯上关系也是很直观的。比如我们在s状态下选择动作a之后再按照最优策略继续选择的价值应该等于当前获得的即时利益，
+以及折扣的新状态下的最优估值的和。公式表示就是
+
+<center>
+
+![](https://latex.codecogs.com/png.latex?q_*(s,a)=E[R_{t+1}+\gamma v_*(S_{t+1})|S_t=s,A_t=a])
+
+![](https://latex.codecogs.com/png.latex?v_*(s')=\underset{a'}{max}q_*(s',a'))
+
+</center>
+
+上面两个式子组合就可以得到
+![](https://latex.codecogs.com/png.latex?q_*(s,a))
+的递推公式了。
+
+
+下面的两个图表示的是
+![](https://latex.codecogs.com/png.latex?v_*)
+和
+![](https://latex.codecogs.com/png.latex?q_*)
+的backup diagram：
+
+<center>
+
+![](../images/3_Finite_MDP/optimal_backup.PNG)
+
+</center>
+
+对于有限MDP问题，可以根据Bellman最优等式构造一个线性方程组。假设有n个状态，那么方程组就是由n个等式组成，有n个未知变量。
+如果转移概率p是已知的，那么解方程组就能得到每个状态的最优值是多少。
+
+一旦我们得到了
+![](https://latex.codecogs.com/png.latex?v_*)
+，那么就很容易得出最优策略了。
+这时我们就根据
+![](https://latex.codecogs.com/png.latex?v_*)
+的递推公式，找到一个或多个能够达到Bellman最优等式的动作。然后把在状态s下选择动作的概率（就是策略）分配给这些能达到Bellman最优
+等式的动作。这个可以认为是一步搜索(one-step search)，其实就是向前看一步(one-step-ahead search)，就是需要贪心的探一下哪个动作
+能够满足Bellman最优等式。
+
+但是如果我们有
+![](https://latex.codecogs.com/png.latex?q_*)就更容易了，根本不用one-step-ahead，因为我们直接得到了(s,a)的值。
+比如我们现在在状态s，我们只需要把所有的q(s,a)拿过来比比，找最大的那些动作a了。动作值函数其实是所有one-step-ahead的高效cache。
+同时，在这种表示下，我们不用再了解状态转移概率等知识了，我们只需要把几个数比比谁最大就好了，后续的状态和后续状态的值是什么我们都不用管。
+
+但是实际我们要使用这种解法需要满足三个条件：
++ 精确掌握环境的状态转移等规则
++ 有足够的计算力去计算
++ Markov性质
+
+一般即使满足了第一点和第三点，我们可能根本无法对一个state个数超大的方程组比较高效的求解。比如棋类游戏，很多都超过了10的20次方种状态，
+我们要想求解方程得需要几千年，我们等不了。强化学习种对于这种问题一般采用近似的解法。
+
+# 7. 最优性和近似性
+
+我们已经知道，得到最优策略需要花费巨大的计算代价。同时内存代价也可能是我们计算的限制。如果我们把所有状态和动作的值函数都存下来，这就是
+tabular case。这需要耗费巨大的内存代价。
+
+因此强化学习问题需要我们去寻找近似的解决方案。比如我们面对的状态如果太多的话，有时我们选择次优的动作可能也不是太差。
+事实上，TD-Gammon算法可能对于大部分状态都有坏的状态，但是我们只需要对于那些常见的状态给出比较好的决策就行了，对不常见的情况不用特别在意。
+
+很多时候我们没有办法找到最优解，因此经常需要找到一种近似的解决方法来替代。
+
