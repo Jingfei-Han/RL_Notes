@@ -8,7 +8,8 @@ import time
 from utils import get_prob
 
 class PolicyIteration(object):
-    def __init__(self, conf, read_model=False):
+    def __init__(self, conf, method="pi", read_model=False):
+        self.method = method #method可以是pi或者vi
         self.read_model = read_model
         self.all_trans_path = conf.all_trans_path
         self.all_rewards_path = conf.all_rewards_path
@@ -39,7 +40,10 @@ class PolicyIteration(object):
         self.this_policy = np.random.randint(0, self.action_n, (self.state_n))
         self.value_function = np.zeros((self.state_n))
 
-        self.train()
+        if self.method.lower().strip() == "pi":
+            self.train() #policy iteration
+        else:
+            self.train_vi() #value iteration
 
         #print(self.this_policy.reshape(self.max_a, self.max_b))
 
@@ -69,7 +73,7 @@ class PolicyIteration(object):
                 delta = np.max(abs(new_V-self.value_function))
                 print(delta)
                 self.value_function = new_V
-                if delta < 0.0000001:
+                if delta < 0.00000001:
                     break
 
             #policy improvement
@@ -93,6 +97,42 @@ class PolicyIteration(object):
         self.this_policy -= 5 #恢复到action
         print(self.this_policy.reshape(self.max_a, self.max_b))
 
+    def train_vi(self):
+        #value iteration
+        if self.read_model:
+            self.all_trans = np.load(self.all_trans_path)
+            self.all_rewards = np.load(self.all_rewards_path)
+        else:
+            self.all_trans, self.all_rewards = self.preprocess()
+            np.save(self.all_trans_path, self.all_trans)
+            np.save(self.all_rewards_path, self.all_rewards)
+
+
+        choose_valuation = np.zeros((self.action_n, self.state_n))
+        while True:
+            tmp_V = np.tile(self.value_function, (self.state_n, 1))
+            for i in range(self.action_n):
+                choose_valuation[i, :] = np.sum(self.all_trans[:,i,:] * (self.all_rewards[:,i,:] + self.gamma*tmp_V), axis=1)
+            new_V = np.max(choose_valuation, axis=0)
+            delta = np.max(abs(new_V-self.value_function))
+            print(delta)
+            self.value_function = new_V
+            if delta < 0.0000001:
+                break
+
+        #policy improvement
+        tmp_policy = np.zeros((self.action_n, self.state_n))
+        tmp_V = np.tile(self.value_function, (self.state_n, 1))
+
+        for i in range(self.action_n):
+            tmp_policy[i, :] = np.sum(self.all_trans[:, i, :]*(self.all_rewards[:, i, :]+self.gamma*tmp_V), axis=1)
+
+        tmp_policy = np.argmax(tmp_policy, axis=0)
+
+        self.this_policy = tmp_policy
+
+        self.this_policy -= 5 #恢复到action
+        print(self.this_policy.reshape(self.max_a, self.max_b))
 
 
     def preprocess(self):

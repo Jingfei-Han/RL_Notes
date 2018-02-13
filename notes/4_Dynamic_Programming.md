@@ -388,3 +388,7 @@ Jack在两个地方有汽车租赁公司。客户租赁一辆汽车需要支付1
 。
 + 状态：每个公司一天结束时候车辆的个数
 + 动作：晚上两个公司运车的个数
+
+这里我们使用policy iteration和value iteration两种方法来解决该问题。首先需要先进行预处理，然后再使用算法来
+计算。代码参考了[项目](https://github.com/zswang666/Jack-Car-Rental-using-Policy-Iteration)
+。我自己实现的代码见[代码](../codes/4_Dynamic_Programming)
