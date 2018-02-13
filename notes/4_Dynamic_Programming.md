@@ -363,3 +363,28 @@ value function发现自己也不用怎么改变了，这个时候就收敛到opt
 
 我们这一章提到的估计的更新，都是建立在其他的估计的基础之上的，这被称为**bootstrapping**。意思就是基于其他的估计去进行我们的估计。
 bootstrapping在强化学习中用处很广，甚至我们不能完全了解environment都进行bootstrapping。
+
+---
+
+# 编程练习
+
+
+# 1. (杰克的汽车租赁) Jack's Car Rental
+
+## 描述：
+Jack在两个地方有汽车租赁公司。客户租赁一辆汽车需要支付10美元。Jack为了保证每个公司都有车，他在晚上在两个公司之间移动汽车，
+移动1辆汽车需要花费2美元。
+
+我们假设每个公司的租用和归还的汽车数量都服从泊松分布，假设在请求租赁的客户数的
+![](https://latex.codecogs.com/png.latex?\lambda)分别是3，4；
+归还租赁的客户数：
+![](https://latex.codecogs.com/png.latex?\lambda)分别是3，2。
+假设每个公司的汽车总数不超过20辆（如果用户归还车辆之后超过了20辆，则忽略这些多余的车辆，这么做是为了简化问题。）
+从一个地方运往另一个地方的车辆不超过5辆。
+
+## 建模
+可见这是一个continuing finite MDP问题。我们假设
+![](https://latex.codecogs.com/png.latex?\gamma=0.9)
+。
++ 状态：每个公司一天结束时候车辆的个数
++ 动作：晚上两个公司运车的个数
