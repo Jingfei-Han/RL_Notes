@@ -379,3 +379,28 @@ state下都有非0的概率。
 </center>
 
 这里的behavior policy只需要是任何soft policy就行。
+
+# 8. 总结(Summary)
+MC方法从sample episodes的经验中学习value function和optimal policies。它比起DP方法有三点优势：
++ MC方法直接从环境学习，不需要环境的model
++ 可以使用仿真或者采样模型。因为大多数应用中，虽然环境model不可得，但是想得到采样还是比较容易的
++ 如果只想观察部分states的value，MC方法还是很容易并且高效的。
+
+除此之外，MC方法还有一个有点，后面将会提到的，就是MC方法不需要遵守Markov property。因为它不需要根据其他状态
+来估计当前value，也就是说，它不是bootstrap的。
+
+GPI过程是探索policy evaluation和policy improvement的交互过程。MC方法为Policy evaluation提供了一种备选方法。
+但是如何保持sufficient exploration是一个问题。我们不能每次只估计最好的，这样的话那些其他action就没有return了。
+一个方法就是exploring starts，就是强制在每种情况下都作为开始，但是这在真实环境中是不太可能出现的。
+On-policy方法总是explore，并且尝试找到best policy that still explore。在off-policy中，agent仍然explore，
+但是学习的是一个deterministic optimal policy。
+
+Off-policy从target policy中学习value function，数据却来自behavior policy。之所以可以这样做是因为使用了importance-sampling。
+分为两种：ordinary importance sampling和weighted importance sampling。前者是unbiased，但是可能得到无穷大的variance。
+后者的variance是有限的，因此更为实用。
+
+总而言之，MC方法区别于DP方法的地方主要有两点：
++ model-free
++ not bootstrap
+
+但是注意这两点并不是强相关的，可以分开。下一章要考虑的就是从experience中学习（像MC方法一样），但是也是bootstrap的（像DP一样）
