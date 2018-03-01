@@ -306,4 +306,76 @@ ordinary importance-sampling估计是unbiased，weighted importance-sampling是b
 在实际中，weighted estimator通常有很低的variance，一般就用这种。那为什么还要介绍ordinary importance-sampling呢？
 是因为ordinary的更容易推广到使用function approximation的approximate method上。
 
-完整的every-visit MC 使用weighted importance sampling进行off-policy evaluation的算法见下一小节，因为设计增量计算。
+完整的every-visit MC 使用weighted importance sampling进行off-policy evaluation的算法见下一小节，因为涉及增量计算。
+
+# 6. 增量实现(Incremental Implementation)
+在第二章多臂老虎机的时候提到了增量计算的方法。只是第二章是average rewards，MC方法是average returns。
+另外，多臂老虎机中使用的方法其实就是on-policy的MC方法，就是相当于做了n次的实验，来计算平均的reward。
+对于off-policy的MC方法，我们需要分成ordinary和weighted的importance sampling方法两种来分别考虑。
+
+对于ordinary importance sampling，就是returns使用importance sampling ratio进行scaled，然后做simple average。
+因此这和第二章的increment method差不多，只是使用scaled returns替换第二章中的rewards就行了。
+
+因此就剩下off-policy的weighted importance sampling的情况了。下面具体介绍。
+
+假设我们有一个returns的序列：
+![](https://latex.codecogs.com/png.latex?G_1,G_2,...,G_{n-1})
+。这些returns都是从同一个state开始的，
+每个对应一个权重
+![](https://latex.codecogs.com/png.latex?W_i=\rho_{t:T(t)-1})
+，因此我们可以得到value function的估计为：
+
+<center>
+
+![](../images/5_monte_carlo_methods/value_function.PNG)
+
+</center>
+
+其中
+![](https://latex.codecogs.com/png.latex?C_0\doteq0)
+
+其实这里的
+![](https://latex.codecogs.com/png.latex?C_n)
+就是指的前n个W的和。
+
+第二章时候给出了一个抽象的update rule，如下：
+<center>
+
+![](../images/2_Multi_armed_Bandits/formulation.png)
+
+</center>
+
+这里我们发现，使用weighted importance-sampling的off-policy的step size就是
+![](https://latex.codecogs.com/png.latex?W_n/C_n)
+
+
+上面的递增形式是很容易推导得到的，具体的这里不再推导了，最后可以得到使用weighted importance-sampling的
+off-policy MC prediction的伪代码为：
+
+<center>
+
+![](../images/5_monte_carlo_methods/off_policy.PNG)
+
+</center>
+
+其实on-policy也可以用上面的这个伪代码，因为on-policy可以看作是off-policy的一种特殊情况。
+
+上面的过程是按照episode更新的，相当于我们根据当前的s和a，去更新表格对应(s,a)位置的值。
+
+# 7. 离线蒙特卡洛控制(Off-policy Monte Carlo Control)
+
+On-policy和off-policy的一个区别就是estimate和control的policy是否相同。behavior policy和target policy
+分开的优势就是target policy可以是deterministic的，比如greedy。而behavior policy可以继续对原来的所有action
+采样。
+
+在off-policy中，为了explore所有的可能性，需要使behavior policy是soft的，也就是对于所有的action在所有的
+state下都有非0的概率。
+
+使用off-policy MC control，用于得到optimal policy的伪代码如下：
+<center>
+
+![](../images/5_monte_carlo_methods/off_policy_control.PNG)
+
+</center>
+
+这里的behavior policy只需要是任何soft policy就行。
