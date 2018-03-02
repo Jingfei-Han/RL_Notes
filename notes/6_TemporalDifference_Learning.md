@@ -231,3 +231,66 @@ MRP其实就是没有action的MDP。下面我们使用MRP关注prediction问题�
 </center>
 
 上面的估计初始值都是0.5，从上图可以看出TD方法比MC方法效果要好。并且还有一个现象就是越往后的episode，波动越明显。
+
+# 3. TD(0)的最优性(Optimality of TD(0))
+
+这一节目的是说明TD(0)得到的value的估计比MC方法得到的估计要好。
+
+假设我们的episode个数是有限的，并且time step是有限的。对于任何一种方法，更新规则都是new = old + alpha * (target - old)。
+之前是每看到一个state就更新一次，下面考虑一种新的更新方法，叫做批量更新(batch updating)。
+
+Batch updating就是我看整个的batch of episodes的数据，然后观察每个state的所有的increments，其实就是target-old。
+原来是每次见到都更新，现在是只更新一次，就是把所有的increments求和，然后统一更新，这样每个state只需要更新一次。
+这样反复看整个training set，直到收敛。
+
+因此，之所以称为batch updating，就是因为更新只会发生在看完所有的batch of training data之后才进行。
+
+使用batch updating，TD(0)和constant-alpha MC方法再满足alpha足够小的情况下都一定(deterministically)可以收敛。
+但是两种方法可能收敛到不同的结果。我们需要理解为什么收敛到的结果是不同的。
+
+下面先给出上面的random walk的batch updating的版本的结果图。
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/batch_updating.PNG)
+
+</center>
+
+在batch training下，constant-alpha MC方法通过所有visti state s的actual returns来计算sample average，作为状态s的估计。
+这种方法是通过最小化训练集中的actual returns的均方误差(MSE)来进行估计的。
+
+那为什么TD(0)的估计结果要好于MC方法呢？是因为MC方法只是在有限的数据内(in a limited way)是optimal的。
+而TD方法的估计是与预测未来的returns相关的。
+
+举个例子来说，假如我们得到了以下8个episodes，这些来自一个unknown的MRP：
++ A, 0, B, 0
++ B, 1
++ B, 1
++ B, 1
++ B, 1
++ B, 1
++ B, 1
++ B, 0
+
+首先我们很容易对state B给出估计，就是3/4。因为总共8次访问了B，6次为1。
+
+关键是如何估计state A的value。
+
+按照batch TD(0)的思路：A转移到B的概率是1，我们知道了B的估计是3/4（其实也可以先看A，只是在更新完B之后又要更新A了，因为要达到收敛），
+所以A的估计就是V(A) = 0 + 1 * (3/4 + 0 - 0) = 3/4。
+
+按照batch MC的思路，我们在这个batch中只见过一次A，得到的actual return为0，因此我们估计V(A)=0。
+
+batch MC方法最小化了MSE，能够实现在training data上的0误差。但是我们仍然会人为batch TD的估计更好。
+如果这个过程是Markov过程的话，我们认为TD方法能够使future data的误差更小，而MC方法能够使existing data的误差更小。
+
+从上面的例子可以看出，batch TD(0)和batch MC的估计一般是不同的。batch MC更希望最小化训练集上的MSE来进行估计，
+batch TD(0)方法总是要找出对于Markov的最大似然模型来说完全正确(exactly correct)的估计。
+
+给出这个model，如果model是exactly correct的，那么我们估计的value function也是exactly correct的，这个叫做**certainty-equivalence estimate**，
+因为这个方法相当于在假定对潜在过程(underlying process)的估计是已知的而不是近似的情况下的估计。一般情况下，batch TD(0)能收敛到certainty-equivalence estimate。
+
+这就可以解释为什么TD方法比MC方法收敛的更快了。在batch的形式下，TD方法更快是因为它直接计算的是true certainty-equivalence estimate。
+
+但是实际certainty-equivalence estimate是没有价值的，因为计算这个是不可行的。
+因此在有很大状态空间的task上面，TD方法可能是唯一可行的近似certainty-equivalence的解决方案。
