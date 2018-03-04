@@ -294,3 +294,196 @@ batch TD(0)方法总是要找出对于Markov的最大似然模型来说完全正
 
 但是实际certainty-equivalence estimate是没有价值的，因为计算这个是不可行的。
 因此在有很大状态空间的task上面，TD方法可能是唯一可行的近似certainty-equivalence的解决方案。
+
+# 4. Sarsa: 同策略TD控制(Sarsa:On-policy TD Control)
+
+现在我们希望将TD方法用于control problem。在MC方法中，我们遇到了exploration和exploitation的tradeoff问题，
+然后得到了两种主要的解决方法：on-policy和off-policy。这一节我们要说的是on-policy TD control method.
+
+首先，我们要学习的不是state-value function，而是action-value function。就像我们在MC方法中说的是的，
+如果我们只有state-value function，我们还是不好得到策略。而如果有action-value function，那么我们只要找在当前状态s下，
+argmaxQ(s,a)的动作就行了。因此这里我们必须估计在当前policy
+![](https://latex.codecogs.com/png.latex?\pi)
+下的
+![](https://latex.codecogs.com/png.latex?q_\pi(s,a))
+。因此我们需要把原来的state序列换成state-action pair序列。
+<center>
+
+![](../images/6_TemporalDifference_Learning/state_action_sequence.PNG)
+
+</center>
+
+在上一节的TD prediction时候，我们考虑的是从state到state的转移，然后学习state的value。而现在我们要考虑的是state-action pair
+到state-action pair的转移，然后学习state-action pair的value。因此我们可以得到下式：
+<center>
+
+![](../images/6_TemporalDifference_Learning/sarsa_update.PNG)
+
+</center>
+
+Sarsa的back diagram为：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/sarsa_backup.PNG)
+
+</center>
+
+如果
+![](https://latex.codecogs.com/png.latex?S_{t+1})
+是terminal，则
+![](https://latex.codecogs.com/png.latex?Q(S_{t+1},A_{t+1})=0)
+。
+
+上面的更新规则需要一个五元组(quintuple):
+![](https://latex.codecogs.com/png.latex?(S_t,A_t,R_{t+1},S_{t+1},A_{t+1}))
+，实际就是State, Action, Reward, next State, next Action，因此称为Sarsa算法。
+
+Sarsa算法的伪代码形式如下：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/sarsa.PNG)
+
+</center>
+
+对于episode很长的问题，MC方法会比较慢，因为它需要等到termination才能开始update。而Sarsa算法没有这个问题，因为它是step-by-step的learning method。
+
+# 5. Q-learning：异策略的TD控制(Q-learning: Off-policy TD Control)
+
+Q-learning是一种非常重要的方法，早期的强化学习发展主要依靠的就是off-policy TD control algorithm，就是Q-learning。
+Q-learning的update rule如下：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/q_learning_update.PNG)
+
+</center>
+
+这里action-value function，Q，直接估计optimal action-value function
+![](https://latex.codecogs.com/png.latex?q_*)
+。Q-learning的backup diagram如下：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/q_learning_backup.PNG)
+
+</center>
+
+Q-learning的伪代码如下：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/q_learning.PNG)
+
+</center>
+
+# 6. 期望Sarsa(Expected Sarsa)
+Expected Sarsa是可以是on-policy的也可以是off-policy的。这里我们介绍的是on-policy的expected sarsa。
+
+考虑与Q-learning相似的方法，只是next state-action pairs不是用最大的value来计算，而是计算expected value。
+因此可以得到这一算法的update rule：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/expected_sarsa_update.PNG)
+
+</center>
+
+给出下一状态
+![](https://latex.codecogs.com/png.latex?S_{t+1})
+，算法将会想Sarsa一样朝着期望的方向移动，因此称为Expected Sarsa。它的backup diagram如下图所示：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/expected_sarsa_backup.PNG)
+
+</center>
+
+Expected Sarsa比Sarsa计算起来更加复杂，但是消除了
+![](https://latex.codecogs.com/png.latex?A_{t+1})
+的variance。给定相同数量的experience，Expected Sarsa比Sarsa要稍微好一点。
+
+# 7. 最大化偏差和双倍学习(Maximization Bias and Double Learning)
+
+这一章所有的控制算法都涉及到在target policy的某种构造(construction)上最大化。
+比如Q-learning的target policy是根据当前action value的greedy policy，就是最大化action value；
+Sarsa通常是epsilon-greedy的也涉及到最大化操作。
+
+在这些算法中，在估计值上的最大值被隐式的当作最大值的估计。其实这会导致正偏差(positive bias)。
+比如我们只有一个状态s，有许多动作a，这些动作的true value q(s,a)都是0。但是在估计的时候，我们的估计值Q(s,a)是一个在0上下波动的结果。
+因此true value的最大值是0，而估计值的最大值是一个正值，因此有一个positive bias，我们称为最大化偏差(maximization bias)。
+
+有没有可以避免maximization bias的方法？首先，我们考虑一个已经估计了每个action的value的bandit问题。这个估计是通过平均多次的reward得到的。
+通过上面所述，我们知道如果我们使用估计的最大值去作为true value最大值的估计时，会存在一个positive maximization。
+
+之所以出现这个问题我们可以认为我们用同一个样本集既决定maximization action，又用来估计value。假如我们把集合分成两个集合，
+分别使用着两个进行独立的估计，分别是
+![](https://latex.codecogs.com/png.latex?Q_1(a),Q_2(a))，每个都作为true value q(a)的一个估计。
+我们可以使用其中的一个估计，
+![](https://latex.codecogs.com/png.latex?Q_1)
+去确定最优动作
+![](https://latex.codecogs.com/png.latex?A^*=argmax_aQ_1(a))
+，然后使用另外一个估计
+![](https://latex.codecogs.com/png.latex?Q_2)
+给出value的估计
+![](https://latex.codecogs.com/png.latex?Q_2(A^*)=Q_2(argmax_aQ_1))
+，这时Q2就是无偏估计，因为
+![](https://latex.codecogs.com/png.latex?E[Q_2(A^*)]=q(A^*))
+。我们也使用类似的过程调换角色给出Q1的无偏估计：
+![](https://latex.codecogs.com/png.latex?Q_1(argmax_aQ_2))
+，这就是双倍讯息学习(double learning)。
+
+注意，尽管我们做了两个估计，但是每次其实只是更新一个估计，因此double learning需要双倍的memory，但是不需要双倍的计算时间。
+
+将double learning扩展到full MDP上，举例而言，可以根据Q-learning得到类似的Double Q-learning，更新公式为：
+
+<center>
+
+![](../images/6_TemporalDifference_Learning/double_q_learning_update.PNG)
+
+</center>
+
+然后有一半得概率把Q1，Q2交换，就是更新Q2。更新过程完全与上式对称。
+
+该算法消除了maximization bias。下面给出Double Q-learnig的完整算法：
+<center>
+
+![](../images/6_TemporalDifference_Learning/double_q_learning.PNG)
+
+</center>
+
+当然，很容易也可以得出Sarsa和Expected Sarsa的double版本。
+
+# 8. 游戏、后状态、其他特例(Games, Afterstates and Other Special Cases)
+
+一般的state value function是估计agent将要选择动作时所处的状态，而有些时候（比如第一章的tie-tac-toe），
+是对agent选择完动作的state进行估计，这叫做后状态(**afterstate**)，afterstate的值函数称为后状态价值函数(afterstate value functions)。
+Afterstates在我们知道环境的初始的状态转移时候（而不是全部的状态转移）是很有用的，最典型的例子就是游戏。
+比如一个棋类游戏，我们很容易知道我们选择完一个动作之后，会转移到哪个状态，这时不需要知道对手怎么下棋。
+这时使用afterstate value function是一个高效的学习方法。
+
+之所以高效在tic-tac-toe中是比较明显的，因为传统的action-value function就是将position和moves映射到一个value。
+但是其实很多position-move pairs会得到同一个position，比如下面的图：
+<center>
+
+![](../images/6_TemporalDifference_Learning/tic_tac_toe.PNG)
+
+</center>
+
+上图的两个position-move pairs不同，但是得到相同的"afterposition"，因此一定有相同的value。
+
+传统的action-value把上面两种情况分开来看，而afterstate value function则会把这两种看作一种情况。
+
+当然afterstate并不是只能用在game上面，也能用在其他的special case，比如排队问题等。
+
+# 9. 总结(Summary)
+
+这一章主要介绍了时序差分学习(TD learning)，为了能保持足够的exploration，可以使用on-policy和off-policy方法。
+当然还有第三种方法可以保持充分的exploration，叫做actor-critic方法，将会在第13章介绍。
+
+TD方法可以应用到on-line的环境中，可以直接与环境进行交互。后面我们将会进一步扩展这些方法。
+
+这一章讲的TD方法是一种TD的special case，被称为一步、表格、免模型TD方法(**one-step,tabular,model-free**)方法。
+下面两章我们将探索多步的形式(multistep forms)，与MC方法相联系或者与DP方法相联系。在书的第二部分，
+将会探索function approximation的形式，而不是表格的形式，这就可以与deep learning和ANN联系起来。
